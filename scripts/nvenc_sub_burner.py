@@ -29,10 +29,12 @@ def check_nvenc(ffmpeg):
 
 def test_nvenc_works(ffmpeg):
     try:
+        test_out = os.path.join(tempfile.gettempdir(), "_nvenc_test.mp4")
         r = subprocess.run(
-            [ffmpeg, "-f", "lavfi", "-i", "color=c=black:s=64x64:d=1",
-             "-c:v", "hevc_nvenc", "-preset", "p7", "-cq", "23",
-             "-y", os.devnull],
+            [ffmpeg, "-f", "lavfi", "-i", "color=c=black:s=320x240:d=1",
+             "-c:v", "hevc_nvenc", "-preset", "p7", "-rc", "constqp",
+             "-qp", "23", "-pix_fmt", "yuv420p",
+             "-y", test_out],
             capture_output=True, text=True, timeout=30
         )
         return r.returncode == 0
@@ -102,7 +104,7 @@ def main():
         "-c:v", vcodec,
     ]
     if vcodec.endswith("nvenc"):
-        cmd += ["-preset", "p7", "-cq", str(args.cq)]
+        cmd += ["-preset", "p7", "-rc", "constqp", "-qp", str(args.cq), "-pix_fmt", "yuv420p"]
     else:
         cmd += ["-crf", str(args.cq)]
     cmd += ["-c:a", "aac", "-b:a", "128k", "-y", args.output]
